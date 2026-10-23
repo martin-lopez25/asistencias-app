@@ -8,6 +8,8 @@ import { getMonthName, getRemainingYearPeriod } from '../utils/calendarUtils';
 // URL base del backend de Django (configurable por variable de entorno)
 export const DJANGO_API_BASE_URL =
   (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+export const ATTENDANCE_API_URL =
+  ((import.meta as any).env?.VITE_ATTENDANCE_API_URL || '').replace(/\/+$/, '');
 
 export interface GenerationResponse {
   success: boolean;
@@ -31,7 +33,7 @@ export async function generateAttendanceSheet(
 
   if (format === 'zip') {
     const period = getRemainingYearPeriod();
-    const response = await fetch('/api/asistencia/original/', {
+    const response = await fetch(`${ATTENDANCE_API_URL}/api/asistencia/original/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -40,11 +42,11 @@ export async function generateAttendanceSheet(
         adscripcion: department?.trim() || undefined,
         year,
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(120000),
     });
     if (!response.ok) {
       const details = await response.json().catch(() => null);
-      throw new Error(details?.error || 'No se pudo generar el Word. Comprueba el servidor Python local.');
+      throw new Error(details?.error || 'No se pudo generar el Word. Comprueba que el servicio de asistencia esté disponible.');
     }
     if (!response.headers.get('Content-Type')?.includes('application/zip')) {
       throw new Error('El servidor no devolvio las hojas Word esperadas.');

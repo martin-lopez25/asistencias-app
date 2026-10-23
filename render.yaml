@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: asistencia-api-martin-lopez25
+    runtime: docker
+    plan: free
+    dockerfilePath: ./asistencia/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://martin-lopez25.github.io

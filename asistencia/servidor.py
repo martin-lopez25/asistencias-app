@@ -2,6 +2,8 @@ import argparse
 import base64
 import io
 import json
+import os
+import subprocess
 from datetime import date
 from functools import lru_cache
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -30,23 +32,34 @@ def renderizar_preview(
         origen = Path(directorio) / "asistencia.docx"
         destino = Path(directorio) / "asistencia.pdf"
         crear_documento(PLANTILLA, anio, mes, quincena, nombre, puesto, adscripcion).save(origen)
-        pythoncom.CoInitialize()
-        word = None
-        documento = None
-        try:
-            word = DispatchEx("Word.Application")
-            word.Visible = False
-            word.DisplayAlerts = 0
-            documento = word.Documents.Open(str(origen), ReadOnly=True, AddToRecentFiles=False)
-            documento.ExportAsFixedFormat(str(destino), 17)
-        finally:
+        if os.name == "nt":
+            import pythoncom
+            from win32com.client import DispatchEx
+
+            pythoncom.CoInitialize()
+            word = None
+            documento = None
             try:
-                if documento is not None:
-                    documento.Close(False)
-                if word is not None:
-                    word.Quit()
+                word = DispatchEx("Word.Application")
+                word.Visible = False
+                word.DisplayAlerts = 0
+                documento = word.Documents.Open(str(origen), ReadOnly=True, AddToRecentFiles=False)
+                documento.ExportAsFixedFormat(str(destino), 17)
             finally:
-                pythoncom.CoUninitialize()
+                try:
+                    if documento is not None:
+                        documento.Close(False)
+                    if word is not None:
+                        word.Quit()
+                finally:
+                    pythoncom.CoUninitialize()
+        else:
+            subprocess.run(
+                ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", directorio, str(origen)],
+                check=True,
+                capture_output=True,
+                timeout=90,
+            )
         paginas = []
         with pymupdf.open(destino) as pdf:
             for pagina in pdf:
@@ -107,9 +120,51 @@ def generar_zip(datos: dict) -> bytes:
 
 
 class AttendanceHandler(BaseHTTPRequestHandler):
+    def origenes_permitidos(self) -> set[str]:
+        configurados = os.environ.get("CORS_ALLOWED_ORIGINS")
+        if configurados is not None:
+            return {origen.strip() for origen in configurados.split(",") if origen.strip()}
+        return {
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "https://martin-lopez25.github.io",
+        }
+
+    def agregar_cors(self) -> None:
+        origen = self.headers.get("Origin")
+        if origen and origen in self.origenes_permitidos():
+            self.send_header("Access-Control-Allow-Origin", origen)
+            self.send_header("Vary", "Origin")
+
     def responder_error(self, estado: int, mensaje: str) -> None:
         contenido = json.dumps({"error": mensaje}).encode("utf-8")
         self.send_response(estado)
+        self.agregar_cors()
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(contenido)))
+        self.end_headers()
+        self.wfile.write(contenido)
+
+    def do_OPTIONS(self) -> None:
+        origen = self.headers.get("Origin")
+        if origen and origen not in self.origenes_permitidos():
+            self.send_response(403)
+            self.end_headers()
+            return
+        self.send_response(204)
+        self.agregar_cors()
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Max-Age", "600")
+        self.end_headers()
+
+    def do_GET(self) -> None:
+        if self.path != "/health":
+            self.responder_error(404, "Ruta no encontrada.")
+            return
+        contenido = b'{"status":"ok"}'
+        self.send_response(200)
+        self.agregar_cors()
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(contenido)))
         self.end_headers()
@@ -137,6 +192,7 @@ class AttendanceHandler(BaseHTTPRequestHandler):
             return
         nombre = f"ASISTENCIAS_{datos['year']}.zip"
         self.send_response(200)
+        self.agregar_cors()
         self.send_header("Content-Type", "application/json; charset=utf-8" if es_preview else "application/zip")
         if not es_preview:
             self.send_header("Content-Disposition", f'attachment; filename="{nombre}"')
@@ -147,8 +203,9 @@ class AttendanceHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="API local de las plantillas de asistencia.")
-    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--host", default=os.environ.get("HOST", "127.0.0.1"))
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8765")))
     args = parser.parse_args()
-    servidor = ThreadingHTTPServer(("127.0.0.1", args.port), AttendanceHandler)
-    print(f"API de asistencia en http://127.0.0.1:{args.port}", flush=True)
+    servidor = ThreadingHTTPServer((args.host, args.port), AttendanceHandler)
+    print(f"API de asistencia en http://{args.host}:{args.port}", flush=True)
     servidor.serve_forever()

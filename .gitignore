@@ -6,5 +6,6 @@ coverage/
 *.log
 __pycache__/
 *.py[cod]
+asistencia/asistencias_2026/
 .env*
 !.env.example

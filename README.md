@@ -48,6 +48,16 @@ el mes indicado hasta diciembre:
 python asistencia/generar_asistencias.py --plantilla "asistencia/ASISTENCIA(1).docx" --inicio 2026-10 --salida asistencia/asistencias_2026 --nombre "Ana Maria Gomez" --puesto "Responsable de Sistemas" --adscripcion "Coordinacion de Vinculacion Estatal"
 ```
 
+## Publicar la app completa
+
+GitHub Pages publica el frontend. La API Python se aloja por separado en Render
+mediante `render.yaml` y `asistencia/Dockerfile`; Render usa LibreOffice para
+mostrar la vista previa DOCX en Linux. La primera vez, crea el servicio desde
+[Render](https://render.com/deploy?repo=https://github.com/martin-lopez25/asistencias-app)
+y confirma el blueprint `asistencia-api-martin-lopez25`. Pages ya apunta a ese
+servicio. En el plan gratuito, la primera solicitud despues de inactividad puede
+tardar mientras Render despierta el backend.
+
 ## Comprobaciones
 
 ```powershell

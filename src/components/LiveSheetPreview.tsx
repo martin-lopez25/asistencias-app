@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Download, Printer, ZoomIn, ZoomOut, Maximize2, ShieldCheck, Sparkles, Loader2, RotateCcw } from 'lucide-react';
 import { generateMonthDays, getMonthName, getRemainingYearPeriod } from '../utils/calendarUtils';
 import { DocumentFormat, ThemeColor } from '../types/attendance';
+import { ATTENDANCE_API_URL } from '../services/attendanceApi';
 
 interface LiveSheetPreviewProps {
   fullName: string;
@@ -77,7 +78,6 @@ export const LiveSheetPreview: React.FC<LiveSheetPreviewProps> = ({
   isGenerated = false,
   format = 'pdf',
 }) => {
-  const isStaticPreview = import.meta.env.VITE_STATIC_PREVIEW === 'true';
   const [scale, setScale] = useState<number>(0.92);
   const [quincena, setQuincena] = useState<1 | 2>(1);
   const [pages, setPages] = useState<{ src: string; width: number; height: number }[]>([]);
@@ -86,16 +86,13 @@ export const LiveSheetPreview: React.FC<LiveSheetPreviewProps> = ({
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    if (format !== 'zip' || isStaticPreview) {
-      setPreviewLoading(false);
-      return;
-    }
+    if (format !== 'zip') return;
     const controller = new AbortController();
     setPreviewLoading(true);
     setPreviewError(null);
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch('/api/asistencia/original/preview/', {
+        const response = await fetch(`${ATTENDANCE_API_URL}/api/asistencia/original/preview/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -122,7 +119,7 @@ export const LiveSheetPreview: React.FC<LiveSheetPreviewProps> = ({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [fullName, jobTitle, department, year, month, quincena, format, retry, isStaticPreview]);
+  }, [fullName, jobTitle, department, year, month, quincena, format, retry]);
   const monthName = getMonthName(month);
   const days = generateMonthDays(year, month);
   const theme = THEME_STYLES[themeColor] || THEME_STYLES.indigo;
@@ -162,11 +159,7 @@ export const LiveSheetPreview: React.FC<LiveSheetPreviewProps> = ({
           </button>
         </div>
         <div className="flex-1 min-h-0 overflow-auto p-3 sm:p-6" aria-busy={previewLoading}>
-          {isStaticPreview ? (
-            <div role="status" className="mx-auto mt-8 max-w-lg rounded border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-              Vista de muestra. La vista previa de Word y la generación de documentos requieren la API Python local.
-            </div>
-          ) : previewLoading ? (
+          {previewLoading ? (
             <div role="status" className="flex items-center justify-center gap-2 py-20 text-sm text-slate-600">
               <Loader2 className="w-4 h-4 animate-spin" /> Cargando Word...
             </div>

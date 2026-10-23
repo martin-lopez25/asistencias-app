@@ -40,7 +40,7 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
-          VITE_STATIC_PREVIEW: 'true'
+          VITE_ATTENDANCE_API_URL: https://asistencia-api-martin-lopez25.onrender.com
 
       - name: Preparar GitHub Pages
         uses: actions/configure-pages@v5
