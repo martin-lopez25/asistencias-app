@@ -2,11 +2,11 @@
 
 ## Ejecutar en local
 
-Desde la carpeta raiz del workspace, instala las dependencias:
+Desde la raiz del repositorio, instala las dependencias:
 
 ```powershell
 python -m pip install -r asistencia/requirements.txt
-npm --prefix generador-de-hojas-de-asistencia install
+npm install
 ```
 
 Inicia la API Python en una terminal:
@@ -15,10 +15,10 @@ Inicia la API Python en una terminal:
 python asistencia/servidor.py
 ```
 
-Inicia el frontend en otra terminal:
+Inicia el frontend en otra terminal desde la raiz del repositorio:
 
 ```powershell
-npm --prefix generador-de-hojas-de-asistencia run dev
+npm run dev
 ```
 
 Abre http://localhost:3000 (Vite muestra otro puerto si esta ocupado).
@@ -30,7 +30,7 @@ como imagenes. No se reconstruye la plantilla con HTML.
 
 ## Descargas
 
-- Captura NOMBRE y PUESTO, selecciona el anio, genera y descarga el ZIP.
+- Captura NOMBRE, PUESTO y ADSCRIPCION, selecciona el anio, genera y descarga el ZIP.
 - El ZIP contiene dos DOCX por mes desde el mes actual hasta diciembre, usando
    `../asistencia/ASISTENCIA(1).docx` y el script original.
 - El formato, adscripcion, jornada, horario y firma institucional del Word se
@@ -45,12 +45,12 @@ El script original tambien admite personalizacion por terminal, generando desde
 el mes indicado hasta diciembre:
 
 ```powershell
-python asistencia/generar_asistencias.py --plantilla "asistencia/ASISTENCIA(1).docx" --inicio 2026-10 --salida asistencia/asistencias_2026 --nombre "Ana Maria Gomez" --puesto "Responsable de Sistemas"
+python asistencia/generar_asistencias.py --plantilla "asistencia/ASISTENCIA(1).docx" --inicio 2026-10 --salida asistencia/asistencias_2026 --nombre "Ana Maria Gomez" --puesto "Responsable de Sistemas" --adscripcion "Coordinacion de Vinculacion Estatal"
 ```
 
 ## Comprobaciones
 
 ```powershell
-npm --prefix generador-de-hojas-de-asistencia run lint
-npm --prefix generador-de-hojas-de-asistencia run build
+npm run lint
+npm run build
 ```

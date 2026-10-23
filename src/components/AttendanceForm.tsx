@@ -4,6 +4,7 @@ import {
   ArrowRight,
   User,
   Briefcase,
+  Building2,
   Calendar,
   SlidersHorizontal,
   Palette,
@@ -33,6 +34,8 @@ const SCHEDULE_OPTIONS = [
   '07:30 - 16:30',
   '08:30 - 17:30',
 ];
+
+const DEFAULT_DEPARTMENT = 'COORDINACION DE VINCULACION ESTATAL';
 
 export const AttendanceForm: React.FC<AttendanceFormProps> = ({
   formData,
@@ -121,6 +124,45 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({
           <p id="jobTitle-error" className="mt-1.5 text-xs text-rose-600 font-medium">
             {errors.jobTitle}
           </p>
+        )}
+      </div>
+
+      {/* Campo: Adscripción */}
+      <div>
+        <label
+          htmlFor="departmentOption"
+          className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+        >
+          Adscripción
+        </label>
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+            <Building2 className="w-4 h-4" />
+          </div>
+          <select
+            id="departmentOption"
+            disabled={isLoading}
+            value={formData.department === DEFAULT_DEPARTMENT ? DEFAULT_DEPARTMENT : 'custom'}
+            onChange={(e) => onChange('department', e.target.value === 'custom' ? '' : e.target.value)}
+            className="w-full appearance-none pl-10 pr-4 py-3 text-sm rounded-xl border border-slate-300/90 transition-all bg-white text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-600 disabled:bg-slate-50 disabled:text-slate-500"
+          >
+            <option value={DEFAULT_DEPARTMENT}>{DEFAULT_DEPARTMENT}</option>
+            <option value="custom">Otra adscripción...</option>
+          </select>
+        </div>
+        {formData.department !== DEFAULT_DEPARTMENT && (
+          <input
+            id="department"
+            type="text"
+            autoCapitalize="characters"
+            maxLength={120}
+            disabled={isLoading}
+            value={formData.department || ''}
+            onChange={(e) => onChange('department', e.target.value)}
+            placeholder="Escribe la adscripción"
+            aria-label="Otra adscripción"
+            className="mt-2 w-full px-4 py-3 text-sm rounded-xl border border-slate-300/90 transition-all bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-600 disabled:bg-slate-50 disabled:text-slate-500"
+          />
         )}
       </div>
 

@@ -6,6 +6,7 @@ import { DocumentFormat, ThemeColor } from '../types/attendance';
 interface LiveSheetPreviewProps {
   fullName: string;
   jobTitle: string;
+  department?: string;
   month: number;
   year: number;
   companyName?: string;
@@ -66,6 +67,7 @@ const THEME_STYLES: Record<ThemeColor, {
 export const LiveSheetPreview: React.FC<LiveSheetPreviewProps> = ({
   fullName,
   jobTitle,
+  department = 'COORDINACION DE VINCULACION ESTATAL',
   month,
   year,
   companyName = 'EMPRESA / INSTITUCIÓN',
@@ -92,7 +94,14 @@ export const LiveSheetPreview: React.FC<LiveSheetPreviewProps> = ({
         const response = await fetch('/api/asistencia/original/preview/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ full_name: fullName, job_title: jobTitle, year, month, fortnight: quincena }),
+          body: JSON.stringify({
+            full_name: fullName,
+            job_title: jobTitle,
+            adscripcion: department,
+            year,
+            month,
+            fortnight: quincena,
+          }),
           signal: controller.signal,
         });
         const result = await response.json();
@@ -109,7 +118,7 @@ export const LiveSheetPreview: React.FC<LiveSheetPreviewProps> = ({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [fullName, jobTitle, year, month, quincena, format, retry]);
+  }, [fullName, jobTitle, department, year, month, quincena, format, retry]);
   const monthName = getMonthName(month);
   const days = generateMonthDays(year, month);
   const theme = THEME_STYLES[themeColor] || THEME_STYLES.indigo;

@@ -26,6 +26,7 @@ export default function App() {
   const [formData, setFormData] = useState<AttendanceFormData>({
     fullName: '',
     jobTitle: '',
+    department: 'COORDINACION DE VINCULACION ESTATAL',
     month: currentDate.getMonth() + 1,
     year: currentDate.getFullYear(),
     companyName: 'EMPRESA / INSTITUCIÓN',
@@ -50,7 +51,7 @@ export default function App() {
 
   // Manejador de cambios en los campos
   const handleFieldChange = (field: keyof AttendanceFormData, value: any) => {
-    const normalizedValue = field === 'fullName' || field === 'jobTitle'
+    const normalizedValue = field === 'fullName' || field === 'jobTitle' || field === 'department'
       ? String(value).toLocaleUpperCase('es-MX')
       : value;
     setFormData((prev) => ({ ...prev, [field]: normalizedValue }));
@@ -256,6 +257,7 @@ export default function App() {
             <LiveSheetPreview
               fullName={formData.fullName}
               jobTitle={formData.jobTitle}
+              department={formData.department}
               month={formData.month}
               year={formData.year}
               companyName={formData.companyName}
@@ -276,6 +278,7 @@ export default function App() {
         onClose={() => setShowPreviewModal(false)}
         fullName={generatedDoc ? generatedDoc.fullName : formData.fullName}
         jobTitle={generatedDoc ? generatedDoc.jobTitle : formData.jobTitle}
+        department={formData.department}
         month={generatedDoc ? generatedDoc.month : formData.month}
         year={generatedDoc ? generatedDoc.year : formData.year}
         companyName={formData.companyName}

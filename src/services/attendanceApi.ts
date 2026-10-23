@@ -24,7 +24,7 @@ export async function generateAttendanceSheet(
   formData: AttendanceFormData,
   options?: { forceSimulation?: boolean }
 ): Promise<GenerationResponse> {
-  const { fullName, jobTitle, month, year, format, themeColor, companyName, workSchedule } = formData;
+  const { fullName, jobTitle, department, month, year, format, themeColor, companyName, workSchedule } = formData;
   const monthName = getMonthName(month);
   const safeName = fullName.trim().toLowerCase().replace(/\s+/g, '_');
   const fallbackFilename = `hoja_asistencia_${safeName}_${monthName.toLowerCase()}_${year}.${format}`;
@@ -34,7 +34,12 @@ export async function generateAttendanceSheet(
     const response = await fetch('/api/asistencia/original/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ full_name: fullName.trim(), job_title: jobTitle.trim(), year }),
+      body: JSON.stringify({
+        full_name: fullName.trim(),
+        job_title: jobTitle.trim(),
+        adscripcion: department?.trim() || undefined,
+        year,
+      }),
       signal: AbortSignal.timeout(30000),
     });
     if (!response.ok) {

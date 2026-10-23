@@ -9,6 +9,7 @@ interface DocumentPreviewModalProps {
   onClose: () => void;
   fullName: string;
   jobTitle: string;
+  department?: string;
   month: number;
   year: number;
   companyName?: string;
@@ -55,6 +56,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   onClose,
   fullName,
   jobTitle,
+  department,
   month,
   year,
   companyName = 'EMPRESA / INSTITUCIÓN',
@@ -71,7 +73,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         <div className="w-full max-w-4xl flex flex-col min-h-0">
           <button type="button" onClick={onClose} aria-label="Cerrar previsualización" title="Cerrar"
             className="self-end bg-white p-2 rounded-md mb-2"><X className="w-5 h-5" /></button>
-          <LiveSheetPreview fullName={fullName} jobTitle={jobTitle} month={month} year={year} format={format} onDownload={onDownload} />
+          <LiveSheetPreview fullName={fullName} jobTitle={jobTitle} department={department} month={month} year={year} format={format} onDownload={onDownload} />
         </div>
       </div>
     );
