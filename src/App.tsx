@@ -30,7 +30,7 @@ export default function App() {
     month: currentDate.getMonth() + 1,
     year: currentDate.getFullYear(),
     companyName: 'EMPRESA / INSTITUCIÓN',
-    format: 'zip',
+    format: import.meta.env.VITE_STATIC_PREVIEW === 'true' ? 'pdf' : 'zip',
     themeColor: 'indigo',
     workSchedule: '08:00 - 17:00',
   });
@@ -156,6 +156,12 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={(tab) => setActiveTab(tab)}
       />
+
+      {import.meta.env.VITE_STATIC_PREVIEW === 'true' && (
+        <div className="border-b border-blue-200 bg-blue-50 px-4 py-2 text-center text-xs text-blue-900">
+          Vista de muestra de GitHub Pages. Para generar documentos Word, usa la versión local con la API Python.
+        </div>
+      )}
 
       {/* Contenedor principal tipo Estudio Interactivo */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">

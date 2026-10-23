@@ -45,6 +45,7 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({
   errors,
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(true);
+  const isStaticPreview = import.meta.env.VITE_STATIC_PREVIEW === 'true';
   const currentYear = new Date().getFullYear();
   const yearOptions = [currentYear - 1, currentYear, currentYear + 1];
   const period = getRemainingYearPeriod();
@@ -284,7 +285,11 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({
                   onChange={(e) => onChange('format', e.target.value)}
                   className="w-full py-2 px-3 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-indigo-600 text-slate-800"
                 >
-                  <option value="zip">Word original - {period.documentCount} hojas (.zip)</option>
+                  {isStaticPreview ? (
+                    <option value="pdf">PDF de muestra (.pdf)</option>
+                  ) : (
+                    <option value="zip">Word original - {period.documentCount} hojas (.zip)</option>
+                  )}
                 </select>
               </div>
             </div>
@@ -322,7 +327,11 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({
             </>
           ) : (
             <>
-              <span>Generar {period.documentCount} hojas: {period.label.toLowerCase()}</span>
+              <span>
+                {isStaticPreview
+                  ? 'Generar PDF de muestra'
+                  : `Generar ${period.documentCount} hojas: ${period.label.toLowerCase()}`}
+              </span>
               <ArrowRight className="w-4 h-4 text-indigo-200" />
             </>
           )}

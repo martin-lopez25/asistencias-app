@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Zona 1: Logo & Marca moderna (Sin login) */}
         <div className="flex items-center gap-3 shrink-0">
           <img
-            src="/images/logo-asistencia.jpg"
+            src={`${import.meta.env.BASE_URL}images/logo-asistencia.jpg`}
             alt=""
             className="h-32 w-32 object-contain"
           />
