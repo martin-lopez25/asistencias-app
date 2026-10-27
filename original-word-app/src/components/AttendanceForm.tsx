@@ -7,8 +7,8 @@ import {
   Building2,
   SlidersHorizontal,
 } from 'lucide-react';
-import { AttendanceFormData, FormErrors } from '../types/attendance';
-import { getRemainingYearPeriod } from '../utils/calendarUtils';
+import { AttendanceFormData, AttendancePeriodMode, FormErrors } from '../types/attendance';
+import { MONTH_NAMES_ES, getRemainingYearPeriod } from '../utils/calendarUtils';
 
 interface AttendanceFormProps {
   formData: AttendanceFormData;
@@ -31,6 +31,14 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({
   const currentYear = new Date().getFullYear();
   const yearOptions = [currentYear - 1, currentYear, currentYear + 1];
   const period = getRemainingYearPeriod();
+  const periodMode = formData.periodMode ?? 'remaining';
+  const selectedMonthName = MONTH_NAMES_ES[formData.month - 1];
+  const documentCount = periodMode === 'remaining' ? period.documentCount : periodMode === 'month' ? 2 : 1;
+  const periodLabel = periodMode === 'remaining'
+    ? period.label.toLowerCase()
+    : periodMode === 'month'
+      ? selectedMonthName.toLowerCase()
+      : `${selectedMonthName.toLowerCase()}, quincena ${formData.fortnight ?? 1}`;
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-6">
@@ -149,8 +157,7 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({
         )}
       </div>
 
-      {/* Selector de paleta cromática (Figma / UIverse style) */}
-      {/* Desplegable de ajustes de período y horario */}
+      {/* Opciones avanzadas */}
       <div className="pt-1">
         <button
           type="button"
@@ -158,12 +165,28 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
-          <span>{showAdvanced ? 'Ocultar opciones avanzadas' : 'Más opciones (Período, Horario, Empresa)'}</span>
+          <span>{showAdvanced ? 'Ocultar opciones avanzadas' : 'Más opciones'}</span>
         </button>
 
         {showAdvanced && (
           <div className="mt-3 p-4 bg-slate-50/90 border border-slate-200/80 rounded-xl space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="periodMode" className="block text-xs font-semibold text-slate-700 mb-1">
+                  Período de generación
+                </label>
+                <select
+                  id="periodMode"
+                  disabled={isLoading}
+                  value={periodMode}
+                  onChange={(e) => onChange('periodMode', e.target.value as AttendancePeriodMode)}
+                  className="w-full py-2 px-3 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-indigo-600 text-slate-800"
+                >
+                  <option value="remaining">Desde el mes actual hasta diciembre</option>
+                  <option value="month">Un mes completo</option>
+                  <option value="fortnight">Una quincena</option>
+                </select>
+              </div>
               <div>
                 <label htmlFor="yearSelect" className="block text-xs font-semibold text-slate-700 mb-1">
                   Año de las hojas
@@ -178,12 +201,49 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({
                   {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
-              <div>
-                <span className="block text-xs font-semibold text-slate-700 mb-1">Formato de salida</span>
-                <p className="w-full py-2 px-3 text-xs bg-white border border-slate-300 rounded-lg text-slate-800">
-                  Word original · {period.documentCount} hojas (.zip)
-                </p>
+            </div>
+            {periodMode !== 'remaining' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="monthSelect" className="block text-xs font-semibold text-slate-700 mb-1">
+                    Mes
+                  </label>
+                  <select
+                    id="monthSelect"
+                    disabled={isLoading}
+                    value={formData.month}
+                    onChange={(e) => onChange('month', parseInt(e.target.value, 10))}
+                    className="w-full py-2 px-3 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-indigo-600 text-slate-800"
+                  >
+                    {MONTH_NAMES_ES.map((name, index) => (
+                      <option key={name} value={index + 1}>{name}</option>
+                    ))}
+                  </select>
+                </div>
+                {periodMode === 'fortnight' && (
+                  <div>
+                    <label htmlFor="fortnightSelect" className="block text-xs font-semibold text-slate-700 mb-1">
+                      Quincena
+                    </label>
+                    <select
+                      id="fortnightSelect"
+                      disabled={isLoading}
+                      value={formData.fortnight ?? 1}
+                      onChange={(e) => onChange('fortnight', parseInt(e.target.value, 10))}
+                      className="w-full py-2 px-3 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-indigo-600 text-slate-800"
+                    >
+                      <option value={1}>Primera (días 1 al 15)</option>
+                      <option value={2}>Segunda (del 16 al fin de mes)</option>
+                    </select>
+                  </div>
+                )}
               </div>
+            )}
+            <div>
+              <span className="block text-xs font-semibold text-slate-700 mb-1">Formato de salida</span>
+              <p className="w-full py-2 px-3 text-xs bg-white border border-slate-300 rounded-lg text-slate-800">
+                Word original · {documentCount} {documentCount === 1 ? 'hoja' : 'hojas'} (.zip)
+              </p>
             </div>
           </div>
         )}
@@ -203,7 +263,7 @@ export const AttendanceForm: React.FC<AttendanceFormProps> = ({
             </>
           ) : (
             <>
-              <span>Generar {period.documentCount} hojas: {period.label.toLowerCase()}</span>
+              <span>Generar {documentCount} {documentCount === 1 ? 'hoja' : 'hojas'}: {periodLabel}</span>
               <ArrowRight className="w-4 h-4 text-indigo-200" />
             </>
           )}

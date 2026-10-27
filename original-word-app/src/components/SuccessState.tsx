@@ -15,6 +15,7 @@ export const SuccessState: React.FC<SuccessStateProps> = ({
   onReset,
 }) => {
   const formattedSize = (document.sizeBytes / 1024).toFixed(1);
+  const sheetCount = document.sheetCount ?? (13 - document.month) * 2;
 
   // Celebración visual al generar con éxito (UIverse / Lovable style)
   useEffect(() => {
@@ -39,7 +40,7 @@ export const SuccessState: React.FC<SuccessStateProps> = ({
         </div>
         <div>
           <h3 className="text-sm font-display font-bold text-slate-900">
-            ¡Las {(13 - document.month) * 2} hojas están listas!
+            {sheetCount === 1 ? '¡La hoja está lista!' : `¡Las ${sheetCount} hojas están listas!`}
           </h3>
           <p className="text-xs text-slate-600 mt-0.5">
             Documento procesado correctamente para <strong className="text-slate-900">{document.fullName}</strong> ({document.jobTitle}).

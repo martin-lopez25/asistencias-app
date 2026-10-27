@@ -4,12 +4,15 @@
 
 export type ThemeColor = 'indigo' | 'slate' | 'emerald' | 'rose';
 export type DocumentFormat = 'zip' | 'pdf' | 'csv';
+export type AttendancePeriodMode = 'remaining' | 'month' | 'fortnight';
 
 export interface AttendanceFormData {
   fullName: string;
   jobTitle: string;
   month: number; // 1-12
   year: number;
+  periodMode?: AttendancePeriodMode;
+  fortnight?: 1 | 2;
   department?: string;
   companyName?: string;
   format: DocumentFormat;
@@ -36,6 +39,7 @@ export interface GeneratedDocument {
   year: number;
   companyName?: string;
   sizeBytes: number;
+  sheetCount?: number;
   createdAt: string;
   isSimulation: boolean;
   format: DocumentFormat;
