@@ -1,8 +1,11 @@
-name: Publicar en GitHub Pages
+name: Publish original Word app to GitHub Pages
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'original-word-app/**'
+      - '.github/workflows/pages-original-word.yml'
   workflow_dispatch:
 
 permissions:
@@ -29,18 +32,21 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: original-word-app/package-lock.json
 
       - name: Instalar dependencias
         run: npm ci
+        working-directory: original-word-app
 
       - name: Revisar tipos
         run: npm run lint
+        working-directory: original-word-app
 
-      - name: Compilar sitio
+      - name: Compilar para GitHub Pages
         run: npm run build
+        working-directory: original-word-app
         env:
           GITHUB_PAGES: 'true'
-          VITE_ATTENDANCE_API_URL: https://asistencia-api-martin-lopez25.onrender.com
 
       - name: Preparar GitHub Pages
         uses: actions/configure-pages@v5
@@ -48,7 +54,7 @@ jobs:
       - name: Subir artefacto
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: original-word-app/dist
 
       - name: Publicar sitio
         id: deployment

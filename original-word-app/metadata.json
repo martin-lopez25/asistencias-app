@@ -1,0 +1,6 @@
+{
+  "name": "Generador de Hojas de Asistencia",
+  "description": "Aplicación web profesional para generar y descargar hojas de control de asistencia laboral personalizadas por nombre y cargo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
