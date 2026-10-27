@@ -4,18 +4,24 @@ import confetti from 'canvas-confetti';
 import { GeneratedDocument } from '../types/attendance';
 
 interface SuccessStateProps {
-  document: GeneratedDocument;
-  onDownload: () => void;
+  documents: GeneratedDocument[];
+  onDownload: (document: GeneratedDocument) => void;
   onReset: () => void;
 }
 
 export const SuccessState: React.FC<SuccessStateProps> = ({
-  document,
+  documents,
   onDownload,
   onReset,
 }) => {
-  const formattedSize = (document.sizeBytes / 1024).toFixed(1);
-  const sheetCount = document.sheetCount ?? (13 - document.month) * 2;
+  const firstDocument = documents[0];
+  const sheetCount = documents.reduce((total, item) => total + (item.sheetCount ?? 1), 0);
+  const totalSize = documents.reduce((total, item) => total + item.sizeBytes, 0);
+  const formattedSize = (totalSize / 1024).toFixed(1);
+  const isZip = documents.length === 1 && firstDocument.format === 'zip';
+  const periodName = documents.length > 1
+    ? firstDocument.monthName.replace(/, quincena [12]$/, '')
+    : firstDocument.monthName;
 
   // Celebración visual al generar con éxito (UIverse / Lovable style)
   useEffect(() => {
@@ -43,7 +49,7 @@ export const SuccessState: React.FC<SuccessStateProps> = ({
             {sheetCount === 1 ? '¡La hoja está lista!' : `¡Las ${sheetCount} hojas están listas!`}
           </h3>
           <p className="text-xs text-slate-600 mt-0.5">
-            Documento procesado correctamente para <strong className="text-slate-900">{document.fullName}</strong> ({document.jobTitle}).
+            Documento procesado correctamente para <strong className="text-slate-900">{firstDocument.fullName}</strong> ({firstDocument.jobTitle}).
           </p>
         </div>
       </div>
@@ -56,14 +62,14 @@ export const SuccessState: React.FC<SuccessStateProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="text-sm font-semibold text-slate-900 truncate">
-              {document.filename}
+              {documents.length === 1 ? firstDocument.filename : `${documents.length} archivos Word`}
             </h4>
             <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-              <span className="font-semibold text-indigo-600">{document.format.toUpperCase()}</span>
+              <span className="font-semibold text-indigo-600">{isZip ? 'ZIP' : 'DOCX'}</span>
               <span aria-hidden="true">·</span>
               <span className="font-mono tabular-nums">{formattedSize} KB</span>
               <span aria-hidden="true">·</span>
-              <span>{document.monthName} {document.year}</span>
+              <span>{periodName} {firstDocument.year}</span>
             </div>
           </div>
         </div>
@@ -75,7 +81,7 @@ export const SuccessState: React.FC<SuccessStateProps> = ({
               Colaborador
             </span>
             <span className="text-slate-900 font-semibold text-xs mt-0.5 block truncate">
-              {document.fullName}
+              {firstDocument.fullName}
             </span>
           </div>
 
@@ -84,7 +90,7 @@ export const SuccessState: React.FC<SuccessStateProps> = ({
               Cargo registrado
             </span>
             <span className="text-slate-900 font-semibold text-xs mt-0.5 block truncate">
-              {document.jobTitle}
+              {firstDocument.jobTitle}
             </span>
           </div>
 
@@ -93,7 +99,7 @@ export const SuccessState: React.FC<SuccessStateProps> = ({
               Período
             </span>
             <span className="text-slate-900 font-semibold text-xs mt-0.5 block">
-              {document.monthName} {document.year}
+              {periodName} {firstDocument.year}
             </span>
           </div>
 
@@ -102,13 +108,13 @@ export const SuccessState: React.FC<SuccessStateProps> = ({
               Motor de generación
             </span>
             <span className="text-slate-900 font-semibold text-xs mt-0.5 block">
-              {document.format === 'zip' ? 'Plantilla Word original' : 'Generador local'}
+              Plantilla Word original
             </span>
           </div>
         </div>
 
         {/* Aviso transparente de simulación */}
-        {document.format === 'zip' && (
+        {documents.every((document) => document.format === 'zip' || document.format === 'docx') && (
           <div className="p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl text-xs text-slate-600 flex items-start gap-2.5">
             <Info className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
             <p>
@@ -120,14 +126,26 @@ export const SuccessState: React.FC<SuccessStateProps> = ({
 
       {/* Botones de acción principales */}
       <div className="space-y-3">
-        <button
-          type="button"
-          onClick={onDownload}
-          className="w-full h-12 inline-flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 rounded-xl shadow-md shadow-indigo-500/25 active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all cursor-pointer"
-        >
-          <Download className="w-4 h-4" />
-          <span>Descargar {document.format.toUpperCase()} generado</span>
-        </button>
+        <div className="space-y-2">
+          {documents.map((generatedDocument) => (
+            <div key={generatedDocument.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-slate-800">{generatedDocument.filename}</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">
+                  {generatedDocument.format.toUpperCase()} · {(generatedDocument.sizeBytes / 1024).toFixed(1)} KB
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onDownload(generatedDocument)}
+                className="inline-flex shrink-0 items-center gap-2 rounded-md bg-indigo-700 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-indigo-800"
+              >
+                <Download className="h-4 w-4" />
+                Descargar {generatedDocument.format === 'zip' ? 'ZIP' : 'Word'}
+              </button>
+            </div>
+          ))}
+        </div>
 
         <div>
           <button

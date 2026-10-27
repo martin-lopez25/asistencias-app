@@ -3,7 +3,7 @@
  */
 
 export type ThemeColor = 'indigo' | 'slate' | 'emerald' | 'rose';
-export type DocumentFormat = 'zip' | 'pdf' | 'csv';
+export type DocumentFormat = 'zip' | 'docx' | 'pdf' | 'csv';
 export type AttendancePeriodMode = 'remaining' | 'month' | 'fortnight';
 
 export interface AttendanceFormData {

@@ -17,8 +17,9 @@ servidor Python, Microsoft Word ni conexión a Internet.
 - Captura nombre, puesto y adscripción; selecciona el año.
 - En opciones avanzadas, genera desde el mes actual hasta diciembre, un mes completo
   o una sola quincena del mes seleccionado.
-- Descarga un ZIP con dos DOCX por mes en el modo normal o mensual, o un DOCX al
-  elegir una quincena.
+- Desde el mes actual hasta diciembre, descarga un ZIP con dos DOCX por mes.
+- Al elegir un mes completo, descarga sus dos DOCX por separado, sin ZIP.
+- Al elegir una quincena, descarga un solo DOCX, sin ZIP.
 - Cada DOCX parte de `public/templates/ASISTENCIA(1).docx`; solo cambia el contenido
   de los campos, el período y la tabla quincenal. Se conservan las demás partes y
   recursos del archivo original.

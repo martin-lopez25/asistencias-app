@@ -56,7 +56,7 @@ export default function App() {
 
   // Estado del proceso de generación
   const [status, setStatus] = useState<GenerationStatus>('idle');
-  const [generatedDoc, setGeneratedDoc] = useState<GeneratedDocument | null>(null);
+  const [generatedDocuments, setGeneratedDocuments] = useState<GeneratedDocument[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Manejador de cambios en los campos
@@ -107,8 +107,9 @@ export default function App() {
     try {
       const response = await generateAttendanceSheet(formData);
 
-      if (response.success && response.document) {
-        setGeneratedDoc(response.document);
+      const documents = response.documents ?? (response.document ? [response.document] : []);
+      if (response.success && documents.length > 0) {
+        setGeneratedDocuments(documents);
         setStatus('success');
       } else {
         setStatus('error');
@@ -125,19 +126,9 @@ export default function App() {
   };
 
   // Descarga del documento generado
-  const handleDownload = async () => {
-    if (status === 'loading' || !validate()) return;
+  const handleDownload = async (download: GeneratedDocument) => {
+    if (status === 'loading') return;
     try {
-      let download = generatedDoc;
-      if (!download) {
-        setStatus('loading');
-        const response = await generateAttendanceSheet(formData);
-        if (!response.document) throw new Error('No se pudo generar el documento.');
-        download = response.document;
-        setGeneratedDoc(download);
-      }
-      setStatus('success');
-      setErrorMessage(null);
       if (Capacitor.isNativePlatform()) {
         const savedFile = await Filesystem.writeFile({
           path: download.filename,
@@ -146,9 +137,9 @@ export default function App() {
         });
         await Share.share({
           title: download.filename,
-          text: 'Hojas de asistencia generadas en PDF.',
+          text: 'Hoja de asistencia en Word.',
           url: savedFile.uri,
-          dialogTitle: 'Guardar hojas de asistencia',
+          dialogTitle: 'Guardar hoja de asistencia',
         });
         return;
       }
@@ -167,8 +158,8 @@ export default function App() {
   // Restablecer para generar una nueva hoja
   const handleReset = () => {
     setStatus('idle');
-    if (generatedDoc) URL.revokeObjectURL(generatedDoc.fileUrl);
-    setGeneratedDoc(null);
+    for (const generatedDocument of generatedDocuments) URL.revokeObjectURL(generatedDocument.fileUrl);
+    setGeneratedDocuments([]);
     setErrorMessage(null);
     setErrors({});
   };
@@ -208,9 +199,9 @@ export default function App() {
             </div>
           )}
 
-          {status === 'success' && generatedDoc ? (
+          {status === 'success' && generatedDocuments.length > 0 ? (
             <SuccessState
-              document={generatedDoc}
+              documents={generatedDocuments}
               onDownload={handleDownload}
               onReset={handleReset}
             />

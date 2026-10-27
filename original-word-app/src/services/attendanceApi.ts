@@ -7,6 +7,7 @@ import { generateOriginalDocx } from '../utils/originalDocxGenerator';
 export interface GenerationResponse {
   success: boolean;
   document?: GeneratedDocument;
+  documents?: GeneratedDocument[];
   error?: string;
 }
 
@@ -25,7 +26,7 @@ export async function generateAttendanceSheet(formData: AttendanceFormData): Pro
       ? getMonthName(month)
       : `${getMonthName(month)}, quincena ${fortnight}`;
   const safeName = fullName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-  const archive = new JSZip();
+  const documents: GeneratedDocument[] = [];
 
   for (let month = startMonth; month <= endMonth; month += 1) {
     for (const selectedFortnight of fortnights) {
@@ -37,17 +38,37 @@ export async function generateAttendanceSheet(formData: AttendanceFormData): Pro
         year,
         fortnight: selectedFortnight,
       });
-      archive.file(`ASISTENCIA_${year}_${String(month).padStart(2, '0')}_Q${selectedFortnight}.docx`, docx);
+      documents.push({
+        id: `local-${year}-${month}-${selectedFortnight}-${Date.now()}`,
+        filename: `ASISTENCIA_${year}_${String(month).padStart(2, '0')}_Q${selectedFortnight}.docx`,
+        fileBlob: docx,
+        fileUrl: URL.createObjectURL(docx),
+        fullName: fullName.trim(),
+        jobTitle: jobTitle.trim(),
+        month,
+        monthName: `${getMonthName(month)}, quincena ${selectedFortnight}`,
+        year,
+        companyName,
+        sizeBytes: docx.size,
+        sheetCount: 1,
+        createdAt: new Date().toISOString(),
+        isSimulation: false,
+        format: 'docx',
+        themeColor,
+      });
     }
   }
 
+  if (periodMode !== 'remaining') {
+    return { success: true, documents };
+  }
+
+  const archive = new JSZip();
+  for (const document of documents) archive.file(document.filename, document.fileBlob);
   const fileBlob = await archive.generateAsync({ type: 'blob', mimeType: 'application/zip' });
+  for (const document of documents) URL.revokeObjectURL(document.fileUrl);
   const fileUrl = URL.createObjectURL(fileBlob);
-  const rangeSuffix = periodMode === 'remaining'
-    ? `${String(startMonth).padStart(2, '0')}_a_12`
-    : periodMode === 'month'
-      ? String(month).padStart(2, '0')
-      : `${String(month).padStart(2, '0')}_Q${fortnight}`;
+  const rangeSuffix = `${String(startMonth).padStart(2, '0')}_a_12`;
 
   return {
     success: true,
